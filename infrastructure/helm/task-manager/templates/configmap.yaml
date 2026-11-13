@@ -4,6 +4,8 @@ kind: ConfigMap
 metadata:
   name: {{ include "task-manager.fullname" . }}-config
   namespace: {{.Release.Namespace}}
+  annotations:
+    gitops-test: "deployed-by-argocd"
   labels:
     {{- include "task-manager.labels" . | nindent 4 }}
 data:

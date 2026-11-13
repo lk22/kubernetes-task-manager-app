@@ -1,0 +1,28 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: security-demo-pod
+  namespace: network-policy-demo
+spec:
+  securityContext:
+    seccompProfile:
+      type: RuntimeDefault
+  containers:
+  - name: security-demo-container
+    image: busybox:1.36
+    command: ["sh", "-c", "echo Hello Kubernetes! && sleep 3600"]
+    securityContext:
+      runAsNonRoot: true
+      runAsUser: 1000
+      runAsGroup: 1000
+      readOnlyRootFilesystem: true
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop:
+          - ALL
+    volumeMounts:
+      - name: tmp-volume
+        mountPath: /tmp
+  volumes:
+    - name: tmp-volume
+      emptyDir: {}

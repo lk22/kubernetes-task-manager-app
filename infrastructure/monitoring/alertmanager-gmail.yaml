@@ -1,0 +1,38 @@
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: AlertmanagerConfig
+metadata:
+  name: alertmanager-gmail
+  namespace: monitoring
+  labels:
+    alertmanager: monitoring
+spec:
+  route:
+    receiver: gmail
+    matchers:
+      - name: alertname
+        value: KubernetesPodCrashLooping
+        matchType: "="
+  receivers:
+    - name: gmail
+      emailConfigs:
+        - to: nightskater2200@gmail.com
+          from: nightskater2200@gmail.com
+          smarthost: smtp.gmail.com:587
+          authUsername: nightskater2200@gmail.com
+          authPassword:
+            name: alertmanager-smtp
+            key: smtp-auth-password
+          requireTLS: true
+          sendResolved: true
+          text: |
+            Kubernetes alarm
+
+            Status: {{ .Status }}
+            Alert: {{ .CommonLabels.alertname }}
+            Namespace: {{ .CommonLabels.namespace }}
+            Pod: {{ .CommonLabels.pod }}
+
+            Beskrivelse:
+            {{ range .Alerts }}
+            {{ .Annotations.description }}
+            {{ end }}

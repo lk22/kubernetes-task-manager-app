@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: storage-web
+  namespace: network-policy-demo
+spec:
+  serviceName: "storage-web"
+  replicas: 3
+  selector:
+    matchLabels:
+      app: storage-web
+  template:
+    metadata:
+      labels:
+        app: storage-web
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:alpine
+          ports:
+            - containerPort: 80
+          volumeMounts:
+            - name: storage-web-pvc
+              mountPath: /usr/share/nginx/html
+  volumeClaimTemplates:
+    - metadata:
+        name: storage-web-pvc
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi

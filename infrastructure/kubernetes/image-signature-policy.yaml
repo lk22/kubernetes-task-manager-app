@@ -1,0 +1,38 @@
+
+apiVersion: policies.kyverno.io/v1
+kind: ImageValidatingPolicy
+metadata:
+  name: verify-nginx-secure
+spec:
+  validationActions:
+    - Deny
+  failurePolicy: Fail
+  evaluation:
+    background:
+      enabled: false
+  matchConstraints:
+    resourceRules:
+      - apiGroups: [""]
+        apiVersions: ["v1"]
+        operations: ["CREATE", "UPDATE"]
+        resources: ["pods"]
+  matchImageReferences:
+    - glob: "cosign-registry:5000/nginx-secure:*"
+  credentials:
+    allowInsecureRegistry: true
+  variables:
+    - name: cm
+      expression: >-
+        resource.get("v1", "configmaps", "kyverno", "cosign-public-key")
+  attestors:
+    - name: cosign
+      cosign:
+        key:
+          expression: variables.cm.data["pubkey"]
+  validations:
+    - expression: >-
+        images.containers.map(
+          image,
+          verifyImageSignatures(image, [attestors.cosign])
+        ).all(result, result > 0)
+      message: "Image must have a valid Cosign signature."

@@ -1,0 +1,73 @@
+services:
+  api:
+    build:
+      context: ./backend
+    # container_name: task-manager
+    ports:
+      - "8001:8000"
+    environment:
+      # RETTELSE: localhost ændret til postgres og porten ændret til 5432 internt
+      - DATABASE_URL=postgresql://root:root@postgres:5432/tasks
+      - POSTGRES_USER=root
+      - POSTGRES_PASSWORD=root
+      - POSTGRES_DB=tasks
+      # RETTELSE: localhost ændret til redis
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        # RETTELSE: Ændret fra 8001 til 8000, da appen internt lytter på port 8000
+        - "import urllib.request; urllib.request.urlopen('http://localhost:8001/health')"
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:16
+    container_name: task-postgres
+    environment:
+      - POSTGRES_USER=root
+      - POSTGRES_PASSWORD=root
+      - POSTGRES_DB=tasks
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - "pg_isready -U root -d tasks"
+      interval: 10s # Sænket for hurtigere opstart
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  redis:
+    image: redis:7
+    container_name: task-redis
+    ports:
+      - "6379:6379" # Tilføjet hvis du vil kunne tilgå Redis fra din computer
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test:
+        - CMD
+        - redis-cli
+        - ping
+      interval: 10s # Sænket for hurtigere opstart
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  redis_data:

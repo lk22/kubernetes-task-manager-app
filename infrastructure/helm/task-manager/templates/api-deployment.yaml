@@ -1,0 +1,55 @@
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api
+  labels:
+    app: task-api
+spec:
+  replicas: {{ .Values.api.replicaCount }}
+  selector:
+    matchLabels:
+      app: task-api
+  template:
+    metadata:
+      labels:
+        app: task-api
+      annotations:
+        checksum/config: {{include (print $.Template.BasePath "/configmap.yaml") . | sha256sum}}
+    spec:
+      containers:
+        - name: task-api
+          image: "{{ .Values.api.image.repository }}:{{ .Values.api.image.tag }}"
+          imagePullPolicy: {{ .Values.api.image.pullPolicy }}
+
+          ports:
+            - containerPort: 8000
+
+          envFrom:
+            - configMapRef:
+                name: {{include "task-manager.fullname" . }}-config
+
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secrets.existingSecret }}
+                  key: DATABASE_URL
+
+            - name: REDIS_URL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secrets.existingSecret }}
+                  key: REDIS_URL
+
+          resources:
+            {{- toYaml .Values.api.resources | nindent 12 }}
+
+          startupProbe:
+            {{- toYaml .Values.api.startupProbe | nindent 12 }}
+
+          readinessProbe:
+            {{- toYaml .Values.api.readinessProbe | nindent 12 }}
+
+          livenessProbe:
+            {{- toYaml .Values.api.livenessProbe | nindent 12 }}

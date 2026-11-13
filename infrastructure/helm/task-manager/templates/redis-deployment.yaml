@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis
+  template:
+    metadata:
+      labels:
+        app: redis
+    spec:
+      containers:
+        - name: redis
+          image: "{{ .Values.redis.image.repository }}:{{ .Values.redis.image.tag }}"
+
+          command:
+            - redis-server
+            - --appendonly
+            - "yes"
+
+          ports:
+            - containerPort: 6379
+
+          volumeMounts:
+            - name: redis-data
+              mountPath: /data
+
+          resources:
+            {{- toYaml .Values.redis.resources | nindent 12 }}
+
+      volumes:
+        - name: redis-data
+          persistentVolumeClaim:
+            claimName: redis-data

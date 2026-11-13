@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: demo-pod
+  namespace: network-policy-demo
+spec:
+  containers:
+    - name: demo-container
+      image: busybox:1.36
+      command: ["sh", "-c", "echo Hello Kubernetes! && sleep 3600"]
+      volumeMounts:
+        - name: demo-volume
+          mountPath: /mnt/demo
+  volumes:
+    - name: demo-volume
+      persistentVolumeClaim:
+        claimName: demo-pvc

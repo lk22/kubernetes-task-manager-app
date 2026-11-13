@@ -18,3 +18,7 @@ __pycache__/
 # IDE
 .idea/
 .vscode/
+
+# Cosign signing keys
+infrastructure/nginx-secure/cosign.key
+infrastructure/nginx-secure/cosign.pub
